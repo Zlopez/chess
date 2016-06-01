@@ -144,6 +144,7 @@ class ChessLogic:
             self._current_player = figures.black
         else:
             self._current_player = figures.white
+        logging.info("Player switched to %s", self._current_player) 
 
     def getFigure(self,x,y):
         """

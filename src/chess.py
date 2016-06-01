@@ -4,8 +4,28 @@ import logging
 import io
 import re
 import string
+import argparse
+import sys
 
-LOG_FOLDER='/var/tmp/'
+LOG_FOLDER='./'
+LOG_LEVEL=logging.ERROR
+
+#Parse arguments
+def parseArguments():
+      global LOG_LEVEL
+
+      parser = argparse.ArgumentParser(description='Cheess command line client.')
+      parser.add_argument('-l',choices=['INFO','DEBUG','WARNING','ERROR'],help='Change log level. Available values INFO|DEBUG|WARNING|ERROR. Default is ERROR.')
+      args = parser.parse_args()
+      if args.l:
+           if(args.l == "INFO"):
+                LOG_LEVEL = logging.INFO
+           if(args.l == "DEBUG"):
+                LOG_LEVEL = logging.DEBUG
+           if(args.l == "WARNING"):
+                LOG_LEVEL = logging.WARNING
+           if(args.l == "ERROR"):
+                LOG_LEVEL = logging.ERROR
 
 def askForInput(game_logic):
     print("\n")
@@ -57,10 +77,11 @@ def checkMove(move, moves):
     return False
 
 if __name__ == "__main__":
+    parseArguments()
     #Start logging
-    logging.basicConfig(format='[%(asctime)s] ' +
+    logging.basicConfig(filename=LOG_FOLDER+"cheess.log",format='[%(asctime)s] ' +
             '{%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-            level=logging.DEBUG)
+            level=LOG_LEVEL)
     game_logic = logic.ChessLogic()
 
     #game loop
