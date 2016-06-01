@@ -1,10 +1,10 @@
-import figure
+from figures import figure
 import logging
-import pawn
-import rook
-import bishop
-import queen
-import knight
+from figures import pawn
+from figures import rook
+from figures import bishop
+from figures import queen
+from figures import knight
 
 class King(figure.Figure):
     """
@@ -98,14 +98,14 @@ class King(figure.Figure):
                 if test_figure._testMove(x,y,state,max_x,max_y):
                     return False
 
-        # Move is valid
+        # Position is not threating king
         return True
 
     def isCheck(self,state,max_x,max_y):
         """
         Check if king is in check.
         """
-        return self._testPosition(self._x,self._y,state,max_x,max_y)
+        return not self._testPosition(self._x,self._y,state,max_x,max_y)
 
 
 if __name__ == "__main__":

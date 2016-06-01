@@ -1,4 +1,4 @@
-import figure
+from figures import figure
 import logging
 import itertools
 import math

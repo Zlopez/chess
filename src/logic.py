@@ -7,6 +7,7 @@ class Conditions(Enum):
     check = 0
     checkMate = 1
     draw = 2
+    play = 3
 
 class ChessLogic:
     """
@@ -150,6 +151,8 @@ class ChessLogic:
         """
         for fig in self._figures:
             if (x,y) == fig.getPosition():
+                if(fig.getOwner() != self._current_player):
+                    break
                 return fig
 
         return None
@@ -167,6 +170,13 @@ class ChessLogic:
                         return Conditions.checkMate
                     else:
                         return Conditions.check
+        return Conditions.play
+
+    def getPlayer(self):
+        """
+        Return current player.
+        """
+        return self._current_player
 
 
 if __name__ == "__main__":
