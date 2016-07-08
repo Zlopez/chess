@@ -10,6 +10,22 @@ import sys
 LOG_LEVEL=logging.ERROR
 HUMAN_READABLE=False
 
+#Convert figure marks to unicode character sequence
+symbols = {
+        'wki' : '\u2654',
+        'wq'  : '\u2655',
+        'wr'  : '\u2656',
+        'wb'  : '\u2657',
+        'wkn' : '\u2658',
+        'wp'  : '\u2659',
+        'bki' : '\u265a',
+        'bq'  : '\u265b',
+        'br'  : '\u265c',
+        'bb'  : '\u265d',
+        'bkn' : '\u265e',
+        'bp'  : '\u265f'}
+
+
 #Parse arguments
 def parseArguments():
     global LOG_LEVEL
@@ -110,9 +126,7 @@ def printNiceOutput(state):
         print('   +---+---+---+---+---+---+---+---+')
         print(' '+ str(row+1) +' |',end='')
         for i in range(0,8):
-            print(state[row*8+i],end='')
-            for j in range(0,3-len(state[row*8+i])):
-                    print(' ',end='')
+            print(' '+symbols.get(state[row*8+i],' '),end=' ')
             print('|',end='')
         print('')
     
