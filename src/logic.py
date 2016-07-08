@@ -14,17 +14,76 @@ class ChessLogic:
     Game logic for chess game.
     """
 
-    def __init__(self):
+    def __init__(self, state):
         # init white figures
-        self._figures = self._init_figures()
+        self._figures = self._init_figures(state)
         self._current_state = self._create_state(self._figures)
-        self._current_player = figures.white
 
-    def _init_figures(self):
+    def _init_figures(self, state):
         """
-        Generate figures for game.
+        Generate figures array from state.
         """
 
+        # generate new game state
+        if not state:
+            logging.debug("Generating new game.")
+            return self._init_new_game()
+        # generate game from existing state
+        else:
+            figures_arr = []
+            for i in range(0,len(state)):
+                figure_color = ''
+                # If field is empty continue
+                if not state[i]:
+                    continue
+                else:
+                    logging.debug("Figure %s found on index %s",state[i],i)
+                    # x coordination is get as modulo 8 (example: index 13 is in coordinates y = 6 and x = 5, 13%8=5) 
+                    x = i%8
+                    # y coordination is get as index divided by 8 cast to integer
+                    y = int(i/8)
+                    logging.debug("Coordinates transformed to %s:%s",x,y)
+                # Black
+                if state[i].find('b',0,1):
+                    figure_color = figures.black    
+                # White
+                elif state[i].find('w',0,1):
+                    figure_color = figures.white
+                # King found
+                if state[i].find('ki',1,len(state[i])):
+                    logging.info("Generating %s with color %s on %s:%s", figures.king, figure_color, x, y)
+                    figures_arr.append(figures.King(x,y,figures.king,figure_color))
+                # Knight found
+                elif state[i].find('kn',1,len(state[i])):
+                    logging.info("Generating %s with color %s on %s:%s", figures.knight, figure_color, x, y)
+                    figures_arr.append(figures.Knight(x,y,figures.knight,figure_color))
+                # Rook found
+                elif state[i].find('r',1,len(state[i])):
+                    logging.info("Generating %s with color %s on %s:%s", figures.rook, figure_color, x, y)
+                    figures_arr.append(figures.Rook(x,y,figures.rook,figure_color))
+                # Bishop found
+                elif state[i].find('b',1,len(state[i])):
+                    logging.info("Generating %s with color %s on %s:%s", figures.bishop, figure_color, x, y)
+                    figures_arr.append(figures.Bishop(x,y,figures.bishop,figure_color))
+                # Queen found
+                elif state[i].find('q',1,len(state[i])):
+                    logging.info("Generating %s with color %s on %s:%s", figures.queen, figure_color, x, y)
+                    figures_arr.append(figures.Queen(x,y,figures.queen,figure_color))
+                # Pawn found
+                elif state[i].find('p',1,len(state[i])):
+                    logging.info("Generating %s with color %s on %s:%s", figures.pawn, figure_color, x, y)
+                    figures_arr.append(figures.Pawn(x,y,figures.pawn,figure_color))
+
+            return figures_arr
+
+                
+                
+
+
+    def _init_new_game(self):
+        """
+        Generate figures array for new game.
+        """
         figures_arr = []
 
         # Generate pawns
@@ -134,17 +193,46 @@ class ChessLogic:
         """
         Get current state of game.
         """
-        return self._current_state
+        state = []
+        # Loop through whole game board
+        # If figure is found in position, then print figure
+        # else print empty space
+        for y in range(0,8):
+            for x in range(0,8):
+                fig = self.getFigure(x,y)
+                if fig:
+                    state.append(self._getFigureMark(fig))
+                else:
+                    state.append('')
 
-    def _switchPlayer(self):
+        return state
+                
+    def _getFigureMark(self,figure):
         """
-        Switch current player.
+        Return mark that will be print in application output.
         """
-        if self._current_player == figures.white:
-            self._current_player = figures.black
+        mark = ''
+        if figure.getOwner() == figures.black:
+            mark += 'b'
         else:
-            self._current_player = figures.white
-        logging.info("Player switched to %s", self._current_player) 
+            mark += 'w'
+        
+        figType = figure.getType()
+
+        if figType == figures.pawn:
+            mark += 'p'
+        elif figType == figures.knight:
+            mark += 'kn'
+        elif figType == figures.rook:
+            mark += 'r'
+        elif figType == figures.bishop:
+            mark += 'b'
+        elif figType == figures.queen:
+            mark += 'q'
+        elif figType == figures.king:
+            mark += 'ki'
+
+        return mark
 
     def getFigure(self,x,y):
         """
@@ -152,8 +240,6 @@ class ChessLogic:
         """
         for fig in self._figures:
             if (x,y) == fig.getPosition():
-                if(fig.getOwner() != self._current_player):
-                    break
                 return fig
 
         return None
@@ -179,7 +265,7 @@ class ChessLogic:
         """
         return self._current_player
 
-
+# Test section
 if __name__ == "__main__":
     #Start logging
     logging.basicConfig(format='[%(asctime)s] ' +
