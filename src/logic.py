@@ -44,33 +44,33 @@ class ChessLogic:
                     y = int(i/8)
                     logging.debug("Coordinates transformed to %s:%s",x,y)
                 # Black
-                if state[i].find('b',0,1):
+                if state[i].startswith('b'):
                     figure_color = figures.black    
                 # White
-                elif state[i].find('w',0,1):
+                elif state[i].startswith('w'):
                     figure_color = figures.white
                 # King found
-                if state[i].find('ki',1,len(state[i])):
+                if state[i].endswith('ki'):
                     logging.info("Generating %s with color %s on %s:%s", figures.king, figure_color, x, y)
                     figures_arr.append(figures.King(x,y,figures.king,figure_color))
                 # Knight found
-                elif state[i].find('kn',1,len(state[i])):
+                elif state[i].endswith('kn'):
                     logging.info("Generating %s with color %s on %s:%s", figures.knight, figure_color, x, y)
                     figures_arr.append(figures.Knight(x,y,figures.knight,figure_color))
                 # Rook found
-                elif state[i].find('r',1,len(state[i])):
+                elif state[i].endswith('r'):
                     logging.info("Generating %s with color %s on %s:%s", figures.rook, figure_color, x, y)
                     figures_arr.append(figures.Rook(x,y,figures.rook,figure_color))
                 # Bishop found
-                elif state[i].find('b',1,len(state[i])):
+                elif state[i].endswith('b'):
                     logging.info("Generating %s with color %s on %s:%s", figures.bishop, figure_color, x, y)
                     figures_arr.append(figures.Bishop(x,y,figures.bishop,figure_color))
                 # Queen found
-                elif state[i].find('q',1,len(state[i])):
+                elif state[i].endswith('q'):
                     logging.info("Generating %s with color %s on %s:%s", figures.queen, figure_color, x, y)
                     figures_arr.append(figures.Queen(x,y,figures.queen,figure_color))
                 # Pawn found
-                elif state[i].find('p',1,len(state[i])):
+                elif state[i].endswith('p'):
                     logging.info("Generating %s with color %s on %s:%s", figures.pawn, figure_color, x, y)
                     figures_arr.append(figures.Pawn(x,y,figures.pawn,figure_color))
 
@@ -176,18 +176,27 @@ class ChessLogic:
         moves = figure.generateMoves(self._current_state,8,8)
         return moves
 
-    def moveFigure(self,figure,x,y):
+    def moveFigure(self,start,target):
         """
-        Move with selected figure to specified position.
+        Move with figure from start to target position.
         """
-        figure.moveTo(x,y,self._current_state,8,8)
+        figure = self.getFigure(start[0],start[1])
+        # Check if figure is on the start position
+        if figure == None:
+            logging.error("No figure on specified position %s:%s", start[0], start[1])
+            return
+        # Check if figure is owned by current player
+        if figure.getOwner() != self._current_player:
+            logging.error("Can't move with oponent figure")
+            return
+
+        figure.moveTo(target[0],target[1],self._current_state,8,8)
         # Delete captured figure
         for fig in self._figures:
-            if ((x,y) == fig.getPosition() and 
+            if ((target[0],target[1]) == fig.getPosition() and 
                     fig.getOwner() is not self._current_player):
                 self._figures.remove(fig)
                 break
-        self._switchPlayer()
 
     def getState(self):
         """
@@ -254,16 +263,20 @@ class ChessLogic:
                 if fig.isCheck(self._current_state, 8,8):
                     # Check mate
                     if self.getMoves(fig):
-                        return Conditions.checkMate
-                    else:
                         return Conditions.check
+                    else:
+                        return Conditions.checkMate
         return Conditions.play
 
-    def getPlayer(self):
+    def setPlayer(self,player):
         """
         Return current player.
         """
-        return self._current_player
+        if player.lower() == 'black' or player.lower() == 'b':
+            self._current_player = figures.black
+        elif player.lower == 'white' or player.lower() == 'w':
+            self._current_player = figures.white
+        logging.debug("Player %s is on move",self._current_player)
 
 # Test section
 if __name__ == "__main__":

@@ -50,25 +50,29 @@ def parseArguments():
     #Human readable format
     if args.H:
         HUMAN_READABLE=True
-        logging.info("Parameter -h detected. Output will be printed in human readable form.")
+        logging.info("Parameter -H detected. Output will be printed in human readable form.")
     #State
     if args.s:
-        state = args.s
-        if (not re.match("^(((w|b)(ki|kn|r|b|q|p))?,){63}$",state)):
+        state = args.s.replace('\'','').replace(' ','')
+        if (not re.match("^\[(((w|b)(ki|kn|r|b|q|p))?,){63}(w|b)(ki|kn|r|b|q|p)\]$",state)):
             logging.error("Invalid state format %s", args.s)
+            parser.print_help()
             sys.exit(1)
         if args.m:
             move = args.m
             if (not re.match("^[a-hA-H][1-8]-[a-hA-H][1-8]$",move)):
                 logging.error("Invalid move format %s", args.m)
+                parser.print_help()
                 sys.exit(1)
         else:
             logging.error("Move parameter not specified.")
+            parser.print_help()
             sys.exit(1)
         if args.p:
             player = args.p
         else:
             logging.error("Player parameter not specified.")
+            parser.print_help()
             sys.exit(1)
 
     return (state,move,player)
@@ -77,7 +81,7 @@ def getCoordinates(move):
     """
     Get coordinates from move.
     """
-    x_position = ord(move[0].lower())-96
+    x_position = ord(move[0].lower())-97
     y_position = int(move[1])-1
 
     return (x_position,y_position)
@@ -121,15 +125,22 @@ if __name__ == "__main__":
     logging.basicConfig(format='[%(asctime)s] ' +
             '{%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
             level=LOG_LEVEL)
-    state,move,player = parseArguments()
+    input_state,move_input,player = parseArguments()
 
     # generate starting state
-    if not state:
+    if not input_state:
         game_logic = logic.ChessLogic('')
         output_state = game_logic.getState()
     # process state
     else:
-        game_logic = logic.ChessLogic(state)
+        #prepare current state
+        state = re.sub(r"[\[\]\s]","",input_state).split(',')
+        
+        game_logic = logic.ChessLogic(state) 
+        move = convertPosition(move_input)
+        game_logic.setPlayer(player)
+        game_logic.moveFigure(move[0],move[1])
+        output_state = game_logic.getState()
 
     
     if HUMAN_READABLE:
