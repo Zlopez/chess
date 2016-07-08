@@ -98,6 +98,23 @@ def convertPosition(input_text):
 
     return (coordinates_from,coordinates_to)
 
+def printNiceOutput(state):
+    """
+    Prints state in human readable form.
+    """
+    for row in range(7,-1,-1):
+        print('   +---+---+---+---+---+---+---+---+')
+        print(' '+ str(row+1) +' |',end='')
+        for i in range(0,8):
+            print(state[row*8+i],end='')
+            for j in range(0,3-len(state[row*8+i])):
+                    print(' ',end='')
+            print('|',end='')
+        print('')
+    
+    print('   +---+---+---+---+---+---+---+---+')
+    print('     A   B   C   D   E   F   G   H  ')
+
 
 if __name__ == "__main__":
     #Start logging
@@ -109,9 +126,13 @@ if __name__ == "__main__":
     # generate starting state
     if not state:
         game_logic = logic.ChessLogic('')
+        output_state = game_logic.getState()
     # process state
     else:
         game_logic = logic.ChessLogic(state)
 
-    state = game_logic.getState()
-    print(state)
+    
+    if HUMAN_READABLE:
+        printNiceOutput(output_state)
+        print('\nUse this state string for next move:')
+    print(output_state)
