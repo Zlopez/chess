@@ -68,15 +68,16 @@ class Pawn(figure.Figure):
         if (x,y) in state and state[(x,y)][1] == self._owner:
             logging.info("There is already figure on position %s:%s", x, y)
             return False
-        # Check transformation
-        if (y==max_y - 1 or y==0) and ((x,y) not in state):
-            logging.info("Pawn is transforming into queen")
-            return True
         # Check if move is legal
         if x==self._x and (y==self._y+1 or y==self._y-1) \
                 and ((x,y) not in state):
-            logging.info("Pawn moved from %s:%s to %s:%s", self._x,self._y,x,y)
-            return True
+            # Check transformation
+            if (y==max_y - 1 or y==0) and ((x,y) not in state):
+                logging.info("Pawn is transforming into queen")
+                return True
+            else:
+                logging.info("Pawn moved from %s:%s to %s:%s", self._x,self._y,x,y)
+                return True
 
         # Move is illegal
         logging.info("Invalid move for pawn from %s:%s to %s:%s", self._x,

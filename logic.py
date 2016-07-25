@@ -49,6 +49,8 @@ class ChessLogic:
                 # White
                 elif state[i].startswith('w'):
                     figure_color = figures.white
+                else:
+                    logging.error("Undefined figure color %s",state[i])
                 # King found
                 if state[i].endswith('ki'):
                     logging.info("Generating %s with color %s on %s:%s", figures.king, figure_color, x, y)
@@ -198,6 +200,18 @@ class ChessLogic:
                 self._figures.remove(fig)
                 break
 
+        # Castling
+        if figure.getType() == figures.king and figure.isCastling:
+            pos = figure.getPosition()
+            # Check if king moved left or right
+            if pos[0] > 4:
+                rook = self.getFigure(7,pos[1])
+                rook.moveTo(target[0]-1, pos[1], self._current_state, 8, 8, False) 
+            else:
+                rook = self.getFigure(0,pos[1])
+                rook.moveTo(target[0]+1, pos[1], self._current_state, 8, 8, False) 
+
+
     def getState(self):
         """
         Get current state of game.
@@ -206,10 +220,12 @@ class ChessLogic:
         # Loop through whole game board
         # If figure is found in position, then print figure
         # else print empty space
+        logging.info("Return chess game board state.")
         for y in range(0,8):
             for x in range(0,8):
                 fig = self.getFigure(x,y)
                 if fig:
+                    logging.debug("Figure found on %s:%s with color %s", x, y, fig.getOwner())
                     state.append(self._getFigureMark(fig))
                 else:
                     state.append('')

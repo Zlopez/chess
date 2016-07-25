@@ -11,6 +11,10 @@ class King(figure.Figure):
     King figure for chess implementation.
     """
 
+    def __init__(self, x, y, figure, owner):
+        super().__init__(x, y, figure, owner)
+        self._castling = False
+
     def _testMove(self, x, y, state, max_x, max_y):
         # Return false if not move will be done
         if y == self._y and x == self._x:
@@ -20,6 +24,41 @@ class King(figure.Figure):
         if x >= max_x or y>= max_y or x < 0 or y < 0:
             logging.info("Invalid move to %s:%s", x, y)
             return False
+        # Check if path is clear for castling
+        if (x == self._x + 2 or x == self._x - 2) and y == self._y:
+            if self.isCheck(state, max_x, max_y): 
+                logging.info("Castling can't be done, king is in check")
+                return False
+            if x < self._x:
+                check_range = range(x,self._x-1)
+                # Check if rook is still on starting position
+                if (0,y) in state:
+                    (fig, owner) = state[0,y]
+                    if not (fig == figure.rook and owner == self._owner):
+                        logging.info("Castling can't be done, figure on position %s:%s is not rook", 0,y)
+                        return False
+                else:
+                    logging.info("Castling can't be done, rook is not in starting position %s:%s", 0,y)
+                    return False
+            else:
+                check_range = range(self._x+1,x)
+                # Check if rook is still on starting position
+                if (max_x-1,y) in state:
+                    (fig, owner) = state[max_x-1,y]
+                    if not (fig == figure.rook and owner == self._owner):
+                        logging.info("Castling can't be done, figure on position %s:%s is not rook", max_x-1, y)
+                        return False
+                else:
+                    logging.info("Castling can't be done, rook is not in starting position %s:%s", max_x-1, y)
+                    return False
+
+            for i in check_range:
+                if (i,y) in state:
+                    logging.info("Castling can't be done, there is figure on position %s:%s", i,y)
+                    return False
+
+            self._castling = True
+
         # Check if move is correct
             # x +/- 1 and y +/- 1
         if (((x == self._x + 1 or x == self._x - 1) and 
@@ -27,10 +66,12 @@ class King(figure.Figure):
             # x +/- 1
             ((x == self._x - 1 or x == self._x + 1) and y == self._y) or
             # y +/- 1
-            ((y == self._y - 1 or y == self._y + 1) and x == self._x)):
+            ((y == self._y - 1 or y == self._y + 1) and x == self._x) or
+            # castling
+            ((x == self._x + 2 or x == self._x - 2) and y == self._y)):
                 # Check if king is in target position
                 if ((x,y) in state and state[(x,y)][0] == figure.king and 
-                        state[(x,y)] is not self._owner):
+                        state[(x,y)][1] is not self._owner):
                     logging.info("King on position %s:%s can't be attacked", 
                             x,y)
                     return False
@@ -62,14 +103,13 @@ class King(figure.Figure):
 
     def _testPosition(self,x,y,state,max_x,max_y):
         """
-        Test if the king can be moved to specified position. Check if no
-        oponnent figure can be moved to specified posisiton.
+        Test if the king will be in check after move. This is done by cycling through oponnent's figures 
+        and testing if they can move to king's target position.
         """
 
         for position in state.keys():
-            logging.info("Testing figure on position %s:%s", position[0], 
-                    position[1])
             (fig,owner) = state[position]
+            logging.info("Testing figure on position %s:%s with color %s", position[0], position[1], owner)
             # Don't test king's owner figures
             if owner != self._owner:
                 test_figure = None
@@ -107,6 +147,11 @@ class King(figure.Figure):
         """
         return not self._testPosition(self._x,self._y,state,max_x,max_y)
 
+    def isCastling(self):
+        """
+        Check if castling move was done.
+        """
+        return self._castling
 
 if __name__ == "__main__":
     #Start logging

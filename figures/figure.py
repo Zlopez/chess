@@ -27,12 +27,12 @@ class Figure:
         del state[(self._x,self._y)]
         state[(x,y)] = (figure,self._owner)
 
-    def moveTo(self, x, y, state, max_x, max_y):
+    def moveTo(self, x, y, state, max_x, max_y, check=True):
         """
-        Move figure to next position.
+        Move figure to next position. If check is false, then just change figure position (this is for special moves).
         """
         # First test if move is correct
-        if self._testMove(x, y, state, max_x, max_y):
+        if (not check) or self._testMove(x, y, state, max_x, max_y):
             self._changeState(x,y,state,self._figure)
             self._x = x
             self._y = y
