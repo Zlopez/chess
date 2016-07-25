@@ -12,18 +12,18 @@ HUMAN_READABLE=False
 
 #Convert figure marks to unicode character sequence
 symbols = {
-        'wki' : '\u2654',
-        'wq'  : '\u2655',
-        'wr'  : '\u2656',
-        'wb'  : '\u2657',
-        'wkn' : '\u2658',
-        'wp'  : '\u2659',
-        'bki' : '\u265a',
-        'bq'  : '\u265b',
-        'br'  : '\u265c',
-        'bb'  : '\u265d',
-        'bkn' : '\u265e',
-        'bp'  : '\u265f'}
+        'bki' : '\u2654',
+        'bq'  : '\u2655',
+        'br'  : '\u2656',
+        'bb'  : '\u2657',
+        'bkn' : '\u2658',
+        'bp'  : '\u2659',
+        'wki' : '\u265a',
+        'wq'  : '\u265b',
+        'wr'  : '\u265c',
+        'wb'  : '\u265d',
+        'wkn' : '\u265e',
+        'wp'  : '\u265f'}
 
 
 #Parse arguments
