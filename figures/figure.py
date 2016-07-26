@@ -36,6 +36,8 @@ class Figure:
             self._changeState(x,y,state,self._figure)
             self._x = x
             self._y = y
+            return True
+        return False
 
     def generateMoves(self, state, max_x, max_y):
         """

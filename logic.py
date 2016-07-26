@@ -192,27 +192,38 @@ class ChessLogic:
             logging.error("Can't move with oponent figure")
             return
 
-        figure.moveTo(target[0],target[1],self._current_state,8,8)
-        # Delete captured figure
-        for fig in self._figures:
-            if ((target[0],target[1]) == fig.getPosition() and 
-                    fig.getOwner() is not self._current_player):
-                self._figures.remove(fig)
-                break
+        if(figure.moveTo(target[0],target[1],self._current_state,8,8)):
+            # Delete captured figure
+            for fig in self._figures:
+                if ((target[0],target[1]) == fig.getPosition() and 
+                        fig.getOwner() is not self._current_player):
+                    self._figures.remove(fig)
+                    break
 
-        # Castling
-        if figure.getType() == figures.king and figure.isCastling():
-            pos = figure.getPosition()
-            # Check if king moved left or right
-            if pos[0] > 4:
-                rook = self.getFigure(7,pos[1])
-                rook.moveTo(target[0]-1, pos[1], self._current_state, 8, 8, False) 
-                logging.info("Move rook figure on %s:%s after castling", 7, pos[1])
-            else:
-                rook = self.getFigure(0,pos[1])
-                rook.moveTo(target[0]+1, pos[1], self._current_state, 8, 8, False) 
-                logging.info("Move rook figure on %s:%s after castling", 0, pos[1])
+            # Castling
+            if figure.getType() == figures.king and figure.isCastling():
+                pos = figure.getPosition()
+                # Check if king moved left or right
+                if pos[0] > 4:
+                    rook = self.getFigure(7,pos[1])
+                    rook.moveTo(target[0]-1, pos[1], self._current_state, 8, 8, False) 
+                    logging.info("Move rook figure on %s:%s after castling", 7, pos[1])
+                else:
+                    rook = self.getFigure(0,pos[1])
+                    rook.moveTo(target[0]+1, pos[1], self._current_state, 8, 8, False) 
+                    logging.info("Move rook figure on %s:%s after castling", 0, pos[1])
 
+            # En passant
+            if figure.getType() == figures.pawn and figure.isEnPassant():
+                pos = figure.getPosition()
+                if figure.getOwner() == figures.black:
+                    pawn = self.getFigure(pos[0],pos[1]+1)
+                    self._figures.remove(pawn)
+                    logging.info("Removed figure on %s:%s after en passant", pos[0], pos[1]+1)
+                if figure.getOwner() == figures.white:
+                    pawn = self.getFigure(pos[0],pos[1]-1)
+                    self._figures.remove(pawn)
+                    logging.info("Removed figure on %s:%s after en passant", pos[0], pos[1]-1)
 
     def getState(self):
         """
