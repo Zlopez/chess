@@ -30,7 +30,7 @@ class King(figure.Figure):
                 logging.info("Castling can't be done, king is in check")
                 return False
             if x < self._x:
-                check_range = range(x,self._x-1)
+                check_range = range(x,self._x)
                 # Check if rook is still on starting position
                 if (0,y) in state:
                     (fig, owner) = state[0,y]
@@ -41,7 +41,7 @@ class King(figure.Figure):
                     logging.info("Castling can't be done, rook is not in starting position %s:%s", 0,y)
                     return False
             else:
-                check_range = range(self._x+1,x)
+                check_range = range(self._x+1,x+1)
                 # Check if rook is still on starting position
                 if (max_x-1,y) in state:
                     (fig, owner) = state[max_x-1,y]

@@ -201,15 +201,17 @@ class ChessLogic:
                 break
 
         # Castling
-        if figure.getType() == figures.king and figure.isCastling:
+        if figure.getType() == figures.king and figure.isCastling():
             pos = figure.getPosition()
             # Check if king moved left or right
             if pos[0] > 4:
                 rook = self.getFigure(7,pos[1])
                 rook.moveTo(target[0]-1, pos[1], self._current_state, 8, 8, False) 
+                logging.info("Move rook figure on %s:%s after castling", 7, pos[1])
             else:
                 rook = self.getFigure(0,pos[1])
                 rook.moveTo(target[0]+1, pos[1], self._current_state, 8, 8, False) 
+                logging.info("Move rook figure on %s:%s after castling", 0, pos[1])
 
 
     def getState(self):
