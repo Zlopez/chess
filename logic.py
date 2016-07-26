@@ -49,6 +49,8 @@ class ChessLogic:
                 # White
                 elif state[i].startswith('w'):
                     figure_color = figures.white
+                else:
+                    logging.error("Undefined figure color %s",state[i])
                 # King found
                 if state[i].endswith('ki'):
                     logging.info("Generating %s with color %s on %s:%s", figures.king, figure_color, x, y)
@@ -190,13 +192,38 @@ class ChessLogic:
             logging.error("Can't move with oponent figure")
             return
 
-        figure.moveTo(target[0],target[1],self._current_state,8,8)
-        # Delete captured figure
-        for fig in self._figures:
-            if ((target[0],target[1]) == fig.getPosition() and 
-                    fig.getOwner() is not self._current_player):
-                self._figures.remove(fig)
-                break
+        if(figure.moveTo(target[0],target[1],self._current_state,8,8)):
+            # Delete captured figure
+            for fig in self._figures:
+                if ((target[0],target[1]) == fig.getPosition() and 
+                        fig.getOwner() is not self._current_player):
+                    self._figures.remove(fig)
+                    break
+
+            # Castling
+            if figure.getType() == figures.king and figure.isCastling():
+                pos = figure.getPosition()
+                # Check if king moved left or right
+                if pos[0] > 4:
+                    rook = self.getFigure(7,pos[1])
+                    rook.moveTo(target[0]-1, pos[1], self._current_state, 8, 8, False) 
+                    logging.info("Move rook figure on %s:%s after castling", 7, pos[1])
+                else:
+                    rook = self.getFigure(0,pos[1])
+                    rook.moveTo(target[0]+1, pos[1], self._current_state, 8, 8, False) 
+                    logging.info("Move rook figure on %s:%s after castling", 0, pos[1])
+
+            # En passant
+            if figure.getType() == figures.pawn and figure.isEnPassant():
+                pos = figure.getPosition()
+                if figure.getOwner() == figures.black:
+                    pawn = self.getFigure(pos[0],pos[1]+1)
+                    self._figures.remove(pawn)
+                    logging.info("Removed figure on %s:%s after en passant", pos[0], pos[1]+1)
+                if figure.getOwner() == figures.white:
+                    pawn = self.getFigure(pos[0],pos[1]-1)
+                    self._figures.remove(pawn)
+                    logging.info("Removed figure on %s:%s after en passant", pos[0], pos[1]-1)
 
     def getState(self):
         """
@@ -206,10 +233,12 @@ class ChessLogic:
         # Loop through whole game board
         # If figure is found in position, then print figure
         # else print empty space
+        logging.info("Return chess game board state.")
         for y in range(0,8):
             for x in range(0,8):
                 fig = self.getFigure(x,y)
                 if fig:
+                    logging.debug("Figure found on %s:%s with color %s", x, y, fig.getOwner())
                     state.append(self._getFigureMark(fig))
                 else:
                     state.append('')
