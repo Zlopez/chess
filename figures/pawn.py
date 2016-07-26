@@ -82,6 +82,7 @@ class Pawn(figure.Figure):
             # Check transformation
             if (y==max_y - 1 or y==0) and ((x,y) not in state):
                 logging.info("Pawn got promotion")
+                self._promotion = True
                 return True
             else:
                 logging.info("Pawn moved from %s:%s to %s:%s", self._x,self._y,x,y)
@@ -95,15 +96,21 @@ class Pawn(figure.Figure):
 
     def isEnPassant(self):
         """
-        Returns whether en passant was done in last move.
+        Returns true, whether en passant was done in last move.
         """
         return self._passant
 
     def isEnPassantDanger(self):
         """
-        Returns whether en passant is possible in next move.
+        Returns true, whether en passant is possible in next move.
         """
         return self._passant_danger
+
+    def isPromoted(self):
+        """
+        Returns true, if promotion is possible.
+        """
+        return self._promotion
 
 if __name__ == "__main__":
     #Start logging
