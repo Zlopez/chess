@@ -16,8 +16,8 @@ To play one turn just run
 
 `python3 chess.py -s <state> -p <player> -m <move>`
 
--**state** is in format generated in first run of `chess.py`.
--**player** is defined as **W, WHITE** for white or **B, BLACK** for Black.
--**move** is defined in format **from-to**. (Example: A1-A2)
+- **state** is in format generated in first run of `chess.py`.
+- **player** is defined as **W, WHITE** for white or **B, BLACK** for Black.
+- **move** is defined in format **from-to**. (Example: A1-A2)
 
 For better readability use argument **-H**.
