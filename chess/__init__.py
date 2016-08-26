@@ -1,0 +1,3 @@
+"""
+Inicialize chess package.
+"""

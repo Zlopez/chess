@@ -2,7 +2,8 @@
 Implementation of Pawn figure in chess command line client.
 """
 import logging
-from figures import figure
+from . import figure
+from ..board import Board
 
 
 class Pawn(figure.Figure):
@@ -10,8 +11,8 @@ class Pawn(figure.Figure):
     Pawn figure for chess implementation.
     """
 
-    def __init__(self, x_index, y_index, fig, owner):
-        super().__init__(x_index, y_index, fig, owner)
+    def __init__(self, x_index, y_index, fig, owner, board):
+        super().__init__(x_index, y_index, fig, owner, board)
         self._promotion = False
         self._passant = False
         self._passant_danger = False
@@ -29,7 +30,7 @@ class Pawn(figure.Figure):
 
         return True
 
-    def _check_attack(self, x_index, y_index, state):
+    def _check_attack(self, x_index, y_index):
         """
         Check if attack can be done.
         """
@@ -38,26 +39,26 @@ class Pawn(figure.Figure):
         # Attack
         if ((x_index == self._x_index + 1 and y_diff in [-1, 1]) or
                 (x_index == self._x_index - 1 and y_diff in [-1, 1])):
-            if ((x_index, y_index) in state and state[
-                    (x_index, y_index)][1] != self._owner):
+            target_figure = self._board.get_figure(x_index, y_index)
+            if target_figure and target_figure.get_owner() != self._owner:
                 logging.info("Attacking %s on position %s:%s",
-                             state[(x_index, y_index)],
+                             target_figure.get_type(),
                              x_index,
                              y_index)
                 return True
             # En passant
-            if ((x_index, self._y_index) in state and
-                    state[(x_index, self._y_index)][1] != self._owner and
-                    state[(x_index, self._y_index)][0] == figure.PAWN):
+            if (target_figure and
+                    target_figure.get_owner() != self._owner and
+                    target_figure.get_type() == figure.PAWN):
                 logging.info("En passant on position %s:%s",
                              x_index,
                              y_index)
-                self._passant = True
+                self._passant=True
                 return True
 
         return False
 
-    def _is_first_move(self, x_index, y_index, state):
+    def _is_first_move(self, x_index, y_index):
         """
         Check if this move is first move.
         In first move Pawn can be moved differently.
@@ -71,19 +72,22 @@ class Pawn(figure.Figure):
                 check_range = range(y_index, self._y_index)
 
             for i in check_range:
-                if (x_index, i) in state:
+                target_figure = self._board.get_figure(x_index, i)
+                if target_figure:
                     logging.info(
                         "Move can't be done, figure on path %s:%s", x_index, i)
                     return False
 
             # Check if en passant can be done in next move
-            if ((x_index + 1, y_index) in state
-                    and state[x_index + 1, y_index][0] == figure.PAWN and
-                    state[x_index + 1, y_index][1] != self._owner):
+            target_figure = self._board.get_figure(x_index + 1, y_index)
+            if (target_figure
+                    and target_figure.get_type() == figure.PAWN and
+                    target_figure.get_owner() != self._owner):
                 self._passant_danger = True
-            if ((x_index - 1, y_index) in state
-                    and state[x_index - 1, y_index][0] == figure.PAWN and
-                    state[x_index - 1, y_index][1] != self._owner):
+            target_figure = self._board.get_figure(x_index - 1, y_index)
+            if (target_figure
+                    and target_figure.get_type() == figure.PAWN and
+                    target_figure.get_owner() != self._owner):
                 self._passant_danger = True
 
             return True
@@ -94,15 +98,15 @@ class Pawn(figure.Figure):
         return (x_index == self._x_index and
                 (y_index == self._y_index + 1 or y_index == self._y_index - 1))
 
-    def _test_move(self, x_index, y_index, state, max_x, max_y):
+    def _test_move(self, x_index, y_index):
         result = None
 
         # First test if move is correct or
         if (self._is_move_correct(x_index, y_index) or
                 # Check if attack is correct or
-                self._check_attack(x_index, y_index, state) or
+                self._check_attack(x_index, y_index) or
                 # Check if it is first move
-                self._is_first_move(x_index, y_index, state)):
+                self._is_first_move(x_index, y_index)):
 
             # Check if figure is moving
             if not self._is_moving(x_index, y_index):
@@ -114,21 +118,22 @@ class Pawn(figure.Figure):
 
             # Check if the move is inside board
             if not self._is_move_inside_board(
-                    x_index, y_index, max_x, max_y):
+                    x_index, y_index):
                 result = False
 
             # Check if king is in target position
-            if self._is_king_on_position(x_index, y_index, state):
+            if self._is_king_on_position(x_index, y_index):
                 result = False
 
             # Check if another figure is on target destination
-            if self._is_figure_on_target_position(x_index, y_index, state):
+            if self._is_figure_on_target_position(x_index, y_index):
                 result = False
 
             if result is None:
                 # Check transformation
-                if (y_index == max_y - 1 or y_index ==
-                        0) and ((x_index, y_index) not in state):
+                target_figure = self._board.get_figure(x_index, y_index)
+                if (y_index == self._board.get_size()[1] - 1 or y_index ==
+                        0) and not target_figure:
                     logging.info("Pawn got promotion")
                     self._promotion = True
                     result = True

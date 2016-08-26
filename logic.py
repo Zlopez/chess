@@ -3,7 +3,8 @@ Chess game logic module.
 """
 import logging
 from enum import Enum
-import figures
+from chess import figures
+from chess.board import Board
 
 
 class Conditions(Enum):
@@ -22,218 +23,8 @@ class ChessLogic:
     """
 
     def __init__(self, state):
-        # init white figures
-        self._figures = self._init_figures(state)
-        self._current_state = self._create_state()
+        self._board = Board(state)
         self._current_player = figures.figure.WHITE
-
-    def _init_figures(self, state):
-        """
-        Generate figures array from state.
-        """
-
-        # generate new game state
-        if not state:
-            logging.debug("Generating new game.")
-            return self._init_new_game()
-        # generate game from existing state
-        else:
-            figures_arr = []
-            for i in range(0, len(state)):
-                figure_color = ''
-                # If field is empty continue
-                if not state[i]:
-                    continue
-                else:
-                    logging.debug("Figure %s found on index %s", state[i], i)
-                    # x_index coordination is get as modulo 8 (example: index 13 is
-                    # in coordinates y_index = 6 and x_index = 5, 13%8=5)
-                    x_index = i % 8
-                    # y_index coordination is get as index divided by 8 cast to
-                    # integer
-                    y_index = int(i / 8)
-                    logging.debug(
-                        "Coordinates transformed to %s:%s", x_index, y_index)
-                # Black
-                if state[i].startswith('b'):
-                    figure_color = figures.figure.BLACK
-                # White
-                elif state[i].startswith('w'):
-                    figure_color = figures.figure.WHITE
-                else:
-                    logging.error("Undefined figure color %s", state[i])
-                # King found
-                if state[i].endswith('ki'):
-                    figure_type = figures.figure.KING
-                    logging.info(
-                        "Generating %s with color %s on %s:%s",
-                        figure_type,
-                        figure_color,
-                        x_index,
-                        y_index)
-                    figures_arr.append(
-                        figures.King(
-                            x_index, y_index, figure_type, figure_color))
-                # Knight found
-                elif state[i].endswith('kn'):
-                    figure_type = figures.figure.KNIGHT
-                    logging.info(
-                        "Generating %s with color %s on %s:%s",
-                        figure_type,
-                        figure_color,
-                        x_index,
-                        y_index)
-                    figures_arr.append(
-                        figures.Knight(
-                            x_index, y_index, figure_type, figure_color))
-                # Rook found
-                elif state[i].endswith('r'):
-                    figure_type = figures.figure.ROOK
-                    logging.info(
-                        "Generating %s with color %s on %s:%s",
-                        figure_type,
-                        figure_color,
-                        x_index,
-                        y_index)
-                    figures_arr.append(
-                        figures.Rook(
-                            x_index, y_index, figure_type, figure_color))
-                # Bishop found
-                elif state[i].endswith('b'):
-                    figure_type = figures.figure.BISHOP
-                    logging.info(
-                        "Generating %s with color %s on %s:%s",
-                        figure_type,
-                        figure_color,
-                        x_index,
-                        y_index)
-                    figures_arr.append(
-                        figures.Bishop(
-                            x_index, y_index, figure_type, figure_color))
-                # Queen found
-                elif state[i].endswith('q'):
-                    figure_type = figures.figure.QUEEN
-                    logging.info(
-                        "Generating %s with color %s on %s:%s",
-                        figure_type,
-                        figure_color,
-                        x_index,
-                        y_index)
-                    figures_arr.append(
-                        figures.Queen(
-                            x_index, y_index, figure_type, figure_color))
-                # Pawn found
-                elif state[i].endswith('p'):
-                    figure_type = figures.figure.PAWN
-                    logging.info(
-                        "Generating %s with color %s on %s:%s",
-                        figure_type,
-                        figure_color,
-                        x_index,
-                        y_index)
-                    figures_arr.append(
-                        figures.Pawn(
-                            x_index, y_index, figure_type, figure_color))
-
-            return figures_arr
-
-    def _generate_figures(self, x_range, y_range, figures_arr, figure_type):
-        """
-        Append figures of one type to array.
-        """
-        for x_index in x_range:
-            for y_index in y_range:
-                logging.info(
-                    "Generating %s on position %s:%s",
-                    figure_type,
-                    x_index,
-                    y_index)
-                if y_index in [6, 7]:
-                    color = figures.figure.BLACK
-                else:
-                    color = figures.figure.WHITE
-
-                # TODO: Use figures.FiguresFactory
-                if figure_type == figures.figure.PAWN:
-                    figures_arr.append(
-                        figures.Pawn(
-                            x_index,
-                            y_index,
-                            figure_type,
-                            color))
-                if figure_type == figures.figure.ROOK:
-                    figures_arr.append(
-                        figures.Rook(
-                            x_index,
-                            y_index,
-                            figure_type,
-                            color))
-                if figure_type == figures.figure.KNIGHT:
-                    figures_arr.append(
-                        figures.Knight(
-                            x_index,
-                            y_index,
-                            figure_type,
-                            color))
-                if figure_type == figures.figure.BISHOP:
-                    figures_arr.append(
-                        figures.Bishop(
-                            x_index,
-                            y_index,
-                            figure_type,
-                            color))
-                if figure_type == figures.figure.QUEEN:
-                    figures_arr.append(
-                        figures.Queen(
-                            x_index,
-                            y_index,
-                            figure_type,
-                            color))
-                if figure_type == figures.figure.KING:
-                    figures_arr.append(
-                        figures.King(
-                            x_index,
-                            y_index,
-                            figure_type,
-                            color))
-
-    def _init_new_game(self):
-        """
-        Generate figures array for new game.
-        """
-        figures_arr = []
-
-        # Generate pawns
-        self._generate_figures(range(0, 8), [1, 6], figures_arr, figures.figure.PAWN)
-
-        # Generate rooks
-        self._generate_figures([0, 7], [0, 7], figures_arr, figures.figure.ROOK)
-
-        # Generate knights
-        self._generate_figures([1, 6], [0, 7], figures_arr, figures.figure.KNIGHT)
-
-        # Generate bishops
-        self._generate_figures([2, 5], [0, 7], figures_arr, figures.figure.BISHOP)
-
-        # Generate queens
-        self._generate_figures([3], [0, 7], figures_arr, figures.figure.QUEEN)
-
-        # Generate kings
-        self._generate_figures([4], [0, 7], figures_arr, figures.figure.KING)
-
-        return figures_arr
-
-    def _create_state(self):
-        """
-        Create state from array of figures.
-        """
-
-        state = {}
-
-        for figure in self._figures:
-            state[figure.get_position()] = (figure.get_type(), figure.get_owner())
-
-        return state
 
     def get_moves(self, figure):
         """
@@ -242,14 +33,14 @@ class ChessLogic:
 
         logging.info("Generating moves for %s on %s:%s", figure.get_type(),
                      figure.get_position()[0], figure.get_position()[1])
-        moves = figure.generate_moves(self._current_state, 8, 8)
+        moves = figure.generate_moves(8, 8)
         return moves
 
     def move_figure(self, start, target):
         """
         Move with figure from start to target position.
         """
-        figure = self.get_figure(start[0], start[1])
+        figure = self._board.get_figure(start[0], start[1])
         # Check if figure is on the start position
         if figure is None:
             logging.error(
@@ -262,58 +53,31 @@ class ChessLogic:
             logging.error("Can't move with oponent figure")
             return
 
-        if figure.move_to(target[0], target[1], self._current_state, 8, 8):
-            # Delete captured figure
-            for fig in self._figures:
-                if ((target[0], target[1]) == fig.get_position() and
-                        fig.get_owner() is not self._current_player):
-                    self._figures.remove(fig)
-                    break
-
+        if figure.move_to(target[0], target[1], 8, 8):
             # Castling
-            if figure.get_type() == figures.king and figure.isCastling():
+            if figure.get_type() == figures.figure.KING and figure.isCastling():
                 pos = figure.get_position()
                 # Check if king moved left or right
                 if pos[0] > 4:
-                    rook = self.get_figure(7, pos[1])
+                    rook = self._board.get_figure(7, pos[1])
                     rook.move_to(
                         target[0] - 1,
                         pos[1],
-                        self._current_state,
                         8,
                         8,
                         False)
                     logging.info(
                         "Move rook figure on %s:%s after castling", 7, pos[1])
                 else:
-                    rook = self.get_figure(0, pos[1])
+                    rook = self._board.get_figure(0, pos[1])
                     rook.move_to(
                         target[0] + 1,
                         pos[1],
-                        self._current_state,
                         8,
                         8,
                         False)
                     logging.info(
                         "Move rook figure on %s:%s after castling", 0, pos[1])
-
-            # En passant
-            if figure.get_type() == figures.pawn and figure.isEnPassant():
-                pos = figure.get_position()
-                if figure.get_owner() == figures.figure.BLACK:
-                    pawn = self.get_figure(pos[0], pos[1] + 1)
-                    self._figures.remove(pawn)
-                    logging.info(
-                        "Removed figure on %s:%s after en passant",
-                        pos[0],
-                        pos[1] + 1)
-                if figure.get_owner() == figures.figure.WHITE:
-                    pawn = self.get_figure(pos[0], pos[1] - 1)
-                    self._figures.remove(pawn)
-                    logging.info(
-                        "Removed figure on %s:%s after en passant",
-                        pos[0],
-                        pos[1] - 1)
 
     def get_state(self):
         """
@@ -326,7 +90,7 @@ class ChessLogic:
         logging.info("Return chess game board state.")
         for y_index in range(0, 8):
             for x_index in range(0, 8):
-                fig = self.get_figure(x_index, y_index)
+                fig = self._board.get_figure(x_index, y_index)
                 if fig:
                     logging.debug(
                         "Figure found on %s:%s with color %s",
@@ -366,29 +130,18 @@ class ChessLogic:
 
         return mark
 
-    def get_figure(self, x_index, y_index):
-        """
-        Return figure object on specified position.
-        """
-        for fig in self._figures:
-            if (x_index, y_index) == fig.get_position():
-                return fig
-
-        return None
-
     def get_condition(self):
         """
         Check if current player is in check.
         """
-        for fig in self._figures:
-            if (fig.get_type() == figures.king and
-                    fig.get_owner() == self._current_player):
-                if fig.isCheck(self._current_state, 8, 8):
-                    # Check mate
-                    if self.get_moves(fig):
-                        return Conditions.check
-                    else:
-                        return Conditions.checkMate
+        king = self._board.get_king(self._current_player)
+        if king:
+            if king.isCheck(8, 8):
+                # Check mate
+                if self.get_moves(king):
+                    return Conditions.check
+                else:
+                    return Conditions.checkMate
         return Conditions.play
 
     def set_player(self, player):

@@ -2,12 +2,8 @@
 Implementation of King figure in chess command line client.
 """
 import logging
-from figures import figure
-from figures import pawn
-from figures import rook
-from figures import bishop
-from figures import queen
-from figures import knight
+from . import figure
+from ..board import board
 
 
 class King(figure.Figure):
@@ -15,56 +11,61 @@ class King(figure.Figure):
     King figure for chess implementation.
     """
 
-    def __init__(self, x_index, y_index, fig, owner):
-        super().__init__(x_index, y_index, fig, owner)
+    def __init__(self, x_index, y_index, fig, owner, board):
+        super().__init__(x_index, y_index, fig, owner, board)
         self._castling = False
 
-    def _check_castling(self, x_index, y_index, state, max_x, max_y):
+    def _check_castling(self, x_index, y_index):
         """
         Check if castling can be done.
         """
         if (x_index == self._x_index + 2 or x_index ==
                 self._x_index - 2) and y_index == self._y_index:
-            if self.is_check(state, max_x, max_y):
+            if self.is_check():
                 logging.info("Castling can't be done, king is in check")
                 return False
             if x_index < self._x_index:
                 check_range = range(x_index, self._x_index)
                 # Check if ROOK is still on starting position
-                if (0, y_index) in state:
-                    (fig, owner) = state[0, y_index]
-                    if not (fig == figure.ROOK and owner == self._owner):
+                target_figure = self._board.get_figure(0, y_index)
+                if target_figure:
+                    owner = target_figure.get_owner()
+                    if not (target_figure.get_type() ==
+                            figure.ROOK and owner == self._owner):
                         logging.info(
-                            "Castling can't be done, figure on position %s:%s is not ROOK",
-                            0,
+                            "Castling can't be done, figure on position %s:%s is not ROOK", 
+                            0, 
                             y_index)
                         return False
                 else:
                     logging.info(
-                        "Castling can't be done, ROOK is not in starting position %s:%s",
-                        0,
+                        "Castling can't be done, ROOK is not in starting position %s:%s", 
+                        0, 
                         y_index)
                     return False
             else:
                 check_range = range(self._x_index + 1, x_index + 1)
                 # Check if ROOK is still on starting position
-                if (max_x - 1, y_index) in state:
-                    (fig, owner) = state[max_x - 1, y_index]
-                    if not (fig == figure.ROOK and owner == self._owner):
+                target_figure = self._board.get_figure(7, y_index)
+                if target_figure:
+                    owner = target_figure.get_owner()
+                    if not (target_figure.get_type() ==
+                            figure.ROOK and owner == self._owner):
                         logging.info(
                             "Castling can't be done, figure on position %s:%s is not ROOK",
-                            max_x - 1,
+                            7,
                             y_index)
                         return False
                 else:
                     logging.info(
                         "Castling can't be done, ROOK is not in starting position %s:%s",
-                        max_x - 1,
+                        7,
                         y_index)
                     return False
 
             for i in check_range:
-                if (i, y_index) in state:
+                target_figure = self._board.get_figure(i, y_index)
+                if target_figure:
                     logging.info(
                         "Castling can't be done, there is figure on position %s:%s", i, y_index)
                     return False
@@ -84,7 +85,7 @@ class King(figure.Figure):
                 # castling
                 (x_index in castling_range and y_index == self._y_index))
 
-    def _test_move(self, x_index, y_index, state, max_x, max_y):
+    def _test_move(self, x_index, y_index):
         result = None
 
         # Check if move is correct
@@ -95,99 +96,60 @@ class King(figure.Figure):
 
             # Check if the move is inside board
             if not self._is_move_inside_board(
-                    x_index, y_index, max_x, max_y):
+                    x_index, y_index):
                 result = False
 
             # Check if path is clear for castling
-            if not self._check_castling(x_index, y_index, state, max_x, max_y):
+            if not self._check_castling(x_index, y_index):
                 result = False
 
             # Check if king is in target position
-            if self._is_king_on_position(x_index, y_index, state):
+            if self._is_king_on_position(x_index, y_index):
                 result = False
 
             # Check if another figure is on target destination
-            if self._is_figure_on_target_position(x_index, y_index, state):
+            if self._is_figure_on_target_position(x_index, y_index):
                 result = False
 
             # Check if no oponnent figure can be moved to king destination
-            if not self._test_position(x_index, y_index, state, max_x, max_y):
+            if not self._test_position(x_index, y_index):
                 logging.info("Oponent figure can move to %s:%s",
                              x_index, y_index)
                 result = False
 
             if result is None:
+                target_figure = self._board.get_figure(x_index, y_index)
                 # Attack
-                if (x_index, y_index) in state and state[
-                        (x_index, y_index)][1] != self._owner:
+                if target_figure and target_figure.get_owner() != self._owner:
                     logging.info("Attacking %s on position %s:%s",
-                                 state[(x_index, y_index)], x_index, y_index)
+                                 target_figure.get_type(), x_index, y_index)
                     result = True
                 # Move is legal
                 else:
-                    logging.info("King moved from %s:%s to %s:%s",
-                                 self._x_index, self._y_index, x_index, y_index)
+                    logging.info(
+                        "King moved from %s:%s to %s:%s",
+                        self._x_index,
+                        self._y_index,
+                        x_index,
+                        y_index)
                     result = True
         else:
             # Move is illegal
-            logging.info("Invalid move for king from %s:%s to %s:%s", self._x_index,
-                         self._y_index, x_index, y_index)
+            logging.info(
+                "Invalid move for king from %s:%s to %s:%s",
+                self._x_index,
+                self._y_index,
+                x_index,
+                y_index)
             result = False
 
         return result
 
-    def _test_position(self, x_index, y_index, state, max_x, max_y):
-        """
-        Test if the king will be in check after move.
-        This is done by cycling through oponnent's figures
-        and testing if they can move to king's target position.
-        """
-
-        for position in state.keys():
-            (fig, owner) = state[position]
-            logging.info(
-                "Testing figure on position %s:%s with color %s",
-                position[0],
-                position[1],
-                owner)
-            # Don't test king's owner figures
-            if owner != self._owner:
-                test_figure = None
-                if fig == figure.PAWN:
-                    test_figure = pawn.Pawn(
-                        position[0], position[1], fig, owner)
-                elif fig == figure.KNIGHT:
-                    test_figure = knight.Knight(position[0], position[1], fig,
-                                                owner)
-                elif fig == figure.ROOK:
-                    test_figure = rook.Rook(position[0], position[1], fig,
-                                            owner)
-                elif fig == figure.BISHOP:
-                    test_figure = bishop.Bishop(position[0], position[1], fig,
-                                                owner)
-                elif fig == figure.QUEEN:
-                    test_figure = queen.Queen(position[0], position[1], fig,
-                                              owner)
-                elif fig == figure.KING:
-                    test_figure = King(position[0], position[1], fig, owner)
-                else:
-                    raise ValueError(fig + " is not a valid value.")
-
-                # Oponent figure can be moved to destination
-                logging.info("Testing if %s can be moved to %s:%s",
-                             test_figure._figure, x_index, y_index)
-                if test_figure._test_move(
-                        x_index, y_index, state, max_x, max_y):
-                    return False
-
-        # Position is not threating king
-        return True
-
-    def is_check(self, state, max_x, max_y):
+    def is_check(self):
         """
         Check if king is in check.
         """
-        return not self._test_position(self._x_index, self._y_index, state, max_x, max_y)
+        return not self._board.test_position(self._x_index, self._y_index)
 
     def is_castling(self):
         """
