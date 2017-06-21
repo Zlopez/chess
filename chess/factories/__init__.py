@@ -1,0 +1,3 @@
+"""
+Inicialize of factories package.
+"""
